@@ -7,10 +7,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
-import { Loader2, Send, RefreshCw, AlertCircle, Info, Mail, User } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2, Send, RefreshCw, AlertCircle, Mail, User } from "lucide-react"
 
 interface Participant {
   name: string
@@ -42,7 +40,6 @@ export function EmailComposer({ meetingData }: EmailComposerProps) {
   const [emailBody, setEmailBody] = useState<string>("")
   const [isGenerating, setIsGenerating] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
-  const [isQuotaError, setIsQuotaError] = useState<boolean>(false)
 
   // Get unique list of people from action items
   const people = Array.from(new Set(meetingData.actionItems.map((item) => item.person)))
@@ -51,58 +48,13 @@ export function EmailComposer({ meetingData }: EmailComposerProps) {
   const generateEmailContent = async () => {
     setIsGenerating(true)
     setError(null)
-    setIsQuotaError(false)
 
     try {
-      let prompt = ""
+      // Instead of using OpenAI, we'll generate a template email based on the meeting data
+      let emailContent = ""
 
       if (selectedPerson === "all") {
-        prompt = `Generate a follow-up email to all participants of a meeting titled "${meetingData.title}" that took place on ${meetingData.date}. 
-        
-        Include:
-        1. A brief greeting
-        2. A summary of the meeting: ${meetingData.summary}
-        3. Key decisions made: ${meetingData.keyDecisions.join(", ")}
-        4. A list of all action items with assignees and due dates
-        5. A polite closing
-        
-        Make it professional but friendly.`
-      } else {
-        // Filter action items for the selected person
-        const personItems = meetingData.actionItems.filter((item) => item.person === selectedPerson)
-
-        prompt = `Generate a personalized follow-up email to ${selectedPerson} after a meeting titled "${meetingData.title}" that took place on ${meetingData.date}.
-        
-        Include:
-        1. A personalized greeting to ${selectedPerson}
-        2. A brief summary of the meeting: ${meetingData.summary}
-        3. Key decisions that are relevant: ${meetingData.keyDecisions.join(", ")}
-        4. A clear list of ${selectedPerson}'s action items: ${personItems.map((item) => `${item.task}${item.dueDate ? ` (due: ${item.dueDate})` : ""}`).join(", ")}
-        5. A polite closing
-        
-        Make it professional but friendly.`
-      }
-
-      try {
-        const { text } = await generateText({
-          model: openai("gpt-4o"),
-          prompt,
-        })
-
-        setEmailBody(text)
-      } catch (apiError) {
-        console.error("OpenAI API error:", apiError)
-
-        // Check if it's a quota error
-        const errorMessage = apiError instanceof Error ? apiError.message : String(apiError)
-        if (errorMessage.includes("quota") || errorMessage.includes("billing") || errorMessage.includes("rate limit")) {
-          setIsQuotaError(true)
-
-          // Generate a fallback email template without using the API
-          let fallbackEmail = ""
-
-          if (selectedPerson === "all") {
-            fallbackEmail = `Hello Team,
+        emailContent = `Hello Team,
 
 I hope this email finds you well. I wanted to follow up on our "${meetingData.title}" meeting that took place on ${meetingData.date}.
 
@@ -119,11 +71,11 @@ Please let me know if you have any questions or need clarification on any of the
 
 Best regards,
 [Your Name]`
-          } else {
-            // Filter action items for the selected person
-            const personItems = meetingData.actionItems.filter((item) => item.person === selectedPerson)
+      } else {
+        // Filter action items for the selected person
+        const personItems = meetingData.actionItems.filter((item) => item.person === selectedPerson)
 
-            fallbackEmail = `Hello ${selectedPerson},
+        emailContent = `Hello ${selectedPerson},
 
 I hope this email finds you well. I wanted to follow up on our "${meetingData.title}" meeting that took place on ${meetingData.date}.
 
@@ -140,14 +92,9 @@ Please let me know if you have any questions or need clarification on any of the
 
 Best regards,
 [Your Name]`
-          }
-
-          setEmailBody(fallbackEmail)
-        } else {
-          // For other errors, propagate them
-          throw apiError
-        }
       }
+
+      setEmailBody(emailContent)
     } catch (error) {
       console.error("Error generating email:", error)
       setError(error instanceof Error ? error.message : "Failed to generate email content")
@@ -158,8 +105,8 @@ Best regards,
 
   return (
     <div className="space-y-8">
-      <Card className="overflow-hidden border-0 shadow-md">
-        <CardHeader className="bg-primary/5 pb-3">
+      <Card className="overflow-hidden border shadow-sm bg-white">
+        <CardHeader className="bg-gray-50 pb-3">
           <CardTitle>Follow-Up Email Composer</CardTitle>
           <CardDescription>Generate and customize follow-up emails for meeting participants</CardDescription>
         </CardHeader>
@@ -168,25 +115,6 @@ Best regards,
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {isQuotaError && (
-            <Alert className="mb-4 bg-amber-50 border-amber-200">
-              <Info className="h-4 w-4 text-amber-600" />
-              <AlertTitle className="text-amber-800">OpenAI API Quota Exceeded</AlertTitle>
-              <AlertDescription className="text-amber-700">
-                Your OpenAI API key has exceeded its quota. A basic email template has been generated instead.
-                <br />
-                <a
-                  href="https://platform.openai.com/account/billing/overview"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline"
-                >
-                  Check your OpenAI billing settings
-                </a>
-              </AlertDescription>
             </Alert>
           )}
 
@@ -248,7 +176,7 @@ Best regards,
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between bg-muted/20 border-t">
+        <CardFooter className="flex justify-between bg-gray-50 border-t">
           <Button variant="outline">Preview</Button>
           <Button>
             <Send className="mr-2 h-4 w-4" />
@@ -258,7 +186,7 @@ Best regards,
       </Card>
 
       <Tabs defaultValue="individual" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6 p-1 bg-muted/50">
+        <TabsList className="grid w-full grid-cols-2 mb-6 p-1 bg-gray-100">
           <TabsTrigger value="individual" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <User className="mr-2 h-4 w-4" />
             Individual Emails
@@ -275,10 +203,10 @@ Best regards,
               const personItems = meetingData.actionItems.filter((item) => item.person === person)
 
               return (
-                <Card key={person} className="overflow-hidden border-0 shadow-md">
-                  <CardHeader className="bg-primary/5 pb-2">
+                <Card key={person} className="overflow-hidden border shadow-sm bg-white">
+                  <CardHeader className="bg-gray-50 pb-2">
                     <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-primary" />
+                      <User className="h-4 w-4 text-indigo-600" />
                       <CardTitle className="text-base">{person}</CardTitle>
                     </div>
                     <CardDescription>
@@ -287,7 +215,7 @@ Best regards,
                   </CardHeader>
                   <CardContent className="p-4 text-sm">
                     <p className="mb-2 font-medium">Action Items:</p>
-                    <ul className="list-inside list-disc space-y-1 text-muted-foreground">
+                    <ul className="list-inside list-disc space-y-1 text-gray-600">
                       {personItems.map((item, index) => (
                         <li key={index}>
                           {item.task}
@@ -296,7 +224,7 @@ Best regards,
                       ))}
                     </ul>
                   </CardContent>
-                  <CardFooter className="border-t bg-muted/20 p-2">
+                  <CardFooter className="border-t bg-gray-50 p-2">
                     <Button size="sm" variant="outline" className="w-full">
                       <Send className="mr-2 h-3 w-3" />
                       Send Email
@@ -308,14 +236,14 @@ Best regards,
           </div>
         </TabsContent>
         <TabsContent value="summary">
-          <Card className="overflow-hidden border-0 shadow-md">
-            <CardHeader className="bg-primary/5 pb-3">
+          <Card className="overflow-hidden border shadow-sm bg-white">
+            <CardHeader className="bg-gray-50 pb-3">
               <CardTitle>Summary Email</CardTitle>
               <CardDescription>Send a comprehensive summary to all participants</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="rounded-md border p-4 bg-muted/20">
-                <p className="text-sm text-muted-foreground">
+              <div className="rounded-md border p-4 bg-gray-50">
+                <p className="text-sm text-gray-600">
                   This email will include the meeting summary, all key decisions, and a complete list of action items
                   assigned to each participant.
                 </p>
@@ -335,7 +263,7 @@ Best regards,
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="border-t bg-muted/20">
+            <CardFooter className="border-t bg-gray-50">
               <Button className="w-full">
                 <Send className="mr-2 h-4 w-4" />
                 Send Summary Email

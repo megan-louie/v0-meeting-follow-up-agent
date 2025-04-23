@@ -7,15 +7,14 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, AlertCircle, Info } from "lucide-react"
+import { Loader2, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function Upload() {
   const [file, setFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isQuotaError, setIsQuotaError] = useState(false)
   const router = useRouter()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,7 +26,6 @@ export function Upload() {
   const handleDemoMode = async () => {
     setIsLoading(true)
     setError(null)
-    setIsQuotaError(false)
 
     try {
       // Use the sample transcript
@@ -50,12 +48,6 @@ export function Upload() {
     } catch (error) {
       console.error("Error processing demo transcript:", error)
       const errorMessage = error instanceof Error ? error.message : "Failed to process demo transcript"
-
-      // Check if it's a quota error
-      if (errorMessage.includes("quota") || errorMessage.includes("billing") || errorMessage.includes("rate limit")) {
-        setIsQuotaError(true)
-      }
-
       setError(errorMessage)
     } finally {
       setIsLoading(false)
@@ -68,7 +60,6 @@ export function Upload() {
 
     setIsLoading(true)
     setError(null)
-    setIsQuotaError(false)
 
     // Create FormData to send the file
     const formData = new FormData()
@@ -91,12 +82,6 @@ export function Upload() {
     } catch (error) {
       console.error("Error processing transcript:", error)
       const errorMessage = error instanceof Error ? error.message : "Failed to process transcript"
-
-      // Check if it's a quota error
-      if (errorMessage.includes("quota") || errorMessage.includes("billing") || errorMessage.includes("rate limit")) {
-        setIsQuotaError(true)
-      }
-
       setError(errorMessage)
     } finally {
       setIsLoading(false)
@@ -114,25 +99,6 @@ export function Upload() {
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {isQuotaError && (
-          <Alert className="mb-4 bg-amber-50">
-            <Info className="h-4 w-4" />
-            <AlertTitle>OpenAI API Quota Exceeded</AlertTitle>
-            <AlertDescription>
-              Your OpenAI API key has exceeded its quota. The application will use pre-processed demo data instead.
-              <br />
-              <a
-                href="https://platform.openai.com/account/billing/overview"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                Check your OpenAI billing settings
-              </a>
-            </AlertDescription>
           </Alert>
         )}
 

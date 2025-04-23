@@ -149,7 +149,7 @@ export default function ResultsPage() {
               <AlertTitle className="text-blue-800">Demo Data</AlertTitle>
               <AlertDescription className="text-blue-700">
                 You are viewing pre-processed demo data. In a production environment, your actual meeting transcripts
-                would be processed using the OpenAI API.
+                would be processed using AI models.
               </AlertDescription>
             </Alert>
           )}
