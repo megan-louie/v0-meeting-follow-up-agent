@@ -50,22 +50,36 @@ export function EmailComposer({ meetingData }: EmailComposerProps) {
     setError(null)
 
     try {
-      // Instead of using OpenAI, we'll generate a template email based on the meeting data
+      // Generate a template email based on the meeting data
       let emailContent = ""
 
       if (selectedPerson === "all") {
-        emailContent = `Hello Team,
+        emailContent = `Hi Team,
 
-I hope this email finds you well. I wanted to follow up on our "${meetingData.title}" meeting that took place on ${meetingData.date}.
+Here's a summary of our "${meetingData.title}" meeting on ${meetingData.date}:
 
-Meeting Summary:
-${meetingData.summary}
+---
 
-Key Decisions:
+### 📋 Summary
+${meetingData.summary
+  .split(". ")
+  .map((sentence) => `- ${sentence.trim()}`)
+  .join("\n")}
+
+---
+
+### ✅ Key Decisions
 ${meetingData.keyDecisions.map((decision) => `- ${decision}`).join("\n")}
 
-Action Items:
-${meetingData.actionItems.map((item) => `- ${item.person} will ${item.task}${item.dueDate ? ` by ${item.dueDate}` : ""}`).join("\n")}
+---
+
+### 🛠️ Action Items
+${meetingData.actionItems.map((item) => `- **${item.person}**: ${item.task}${item.dueDate ? ` (Due: ${item.dueDate})` : ""}`).join("\n")}
+
+---
+
+### 📅 Next Steps
+Let's schedule a follow-up meeting next week to track our progress.
 
 Please let me know if you have any questions or need clarification on any of the items above.
 
@@ -75,18 +89,26 @@ Best regards,
         // Filter action items for the selected person
         const personItems = meetingData.actionItems.filter((item) => item.person === selectedPerson)
 
-        emailContent = `Hello ${selectedPerson},
+        emailContent = `Hi ${selectedPerson},
 
-I hope this email finds you well. I wanted to follow up on our "${meetingData.title}" meeting that took place on ${meetingData.date}.
+I wanted to follow up on our "${meetingData.title}" meeting on ${meetingData.date}.
 
-Meeting Summary:
+---
+
+### 📋 Meeting Summary
 ${meetingData.summary}
 
-Key Decisions:
+---
+
+### ✅ Key Decisions
 ${meetingData.keyDecisions.map((decision) => `- ${decision}`).join("\n")}
 
-Your Action Items:
-${personItems.map((item) => `- ${item.task}${item.dueDate ? ` (due by ${item.dueDate})` : ""}`).join("\n")}
+---
+
+### 🛠️ Your Action Items
+${personItems.map((item) => `- ${item.task}${item.dueDate ? ` (Due: ${item.dueDate})` : ""}`).join("\n")}
+
+---
 
 Please let me know if you have any questions or need clarification on any of the items above.
 
@@ -105,9 +127,12 @@ Best regards,
 
   return (
     <div className="space-y-8">
-      <Card className="overflow-hidden border shadow-sm bg-white">
+      <Card className="overflow-hidden border shadow-md">
         <CardHeader className="bg-gray-50 pb-3">
-          <CardTitle>Follow-Up Email Composer</CardTitle>
+          <div className="flex items-center">
+            <span className="mr-2 text-xl">✉️</span>
+            <CardTitle>Follow-Up Email Composer</CardTitle>
+          </div>
           <CardDescription>Generate and customize follow-up emails for meeting participants</CardDescription>
         </CardHeader>
         <CardContent className="pt-6 space-y-6">
@@ -168,7 +193,7 @@ Best regards,
             <div className="rounded-md border">
               <Textarea
                 id="body"
-                className="min-h-[300px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="min-h-[300px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 font-mono text-sm"
                 placeholder="Email content will appear here after generation..."
                 value={emailBody}
                 onChange={(e) => setEmailBody(e.target.value)}
@@ -178,27 +203,7 @@ Best regards,
         </CardContent>
         <CardFooter className="flex justify-between bg-gray-50 border-t">
           <Button variant="outline">Preview</Button>
-          <Button onClick={async () => {
-            try {
-              // Check if we're on GitHub Pages (static deployment)
-              if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-                // Use the static API mock
-                const { sendEmailApi } = await import('@/lib/static-api-mock');
-                await sendEmailApi({ 
-                  to: selectedPerson === 'all' ? 'All Participants' : selectedPerson,
-                  subject: emailSubject,
-                  body: emailBody
-                });
-                alert('Email sent successfully (simulated)');
-              } else {
-                // In a real environment, this would send to the API route
-                alert('Email sending would connect to a real email service in production.');
-              }
-            } catch (error) {
-              console.error('Error sending email:', error);
-              alert('Failed to send email: ' + (error instanceof Error ? error.message : 'Unknown error'));
-            }
-          }}>
+          <Button>
             <Send className="mr-2 h-4 w-4" />
             Send Email
           </Button>
@@ -223,7 +228,7 @@ Best regards,
               const personItems = meetingData.actionItems.filter((item) => item.person === person)
 
               return (
-                <Card key={person} className="overflow-hidden border shadow-sm bg-white">
+                <Card key={person} className="overflow-hidden border shadow-md">
                   <CardHeader className="bg-gray-50 pb-2">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-indigo-600" />
@@ -256,39 +261,60 @@ Best regards,
           </div>
         </TabsContent>
         <TabsContent value="summary">
-          <Card className="overflow-hidden border shadow-sm bg-white">
+          <Card className="overflow-hidden border shadow-md">
             <CardHeader className="bg-gray-50 pb-3">
-              <CardTitle>Summary Email</CardTitle>
+              <div className="flex items-center">
+                <span className="mr-2 text-xl">📧</span>
+                <CardTitle>Summary Email</CardTitle>
+              </div>
               <CardDescription>Send a comprehensive summary to all participants</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="rounded-md border p-4 bg-gray-50">
-                <p className="text-sm text-gray-600">
-                  This email will include the meeting summary, all key decisions, and a complete list of action items
-                  assigned to each participant.
-                </p>
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                    <span className="text-sm">Meeting summary included</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                    <span className="text-sm">Key decisions highlighted</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                    <span className="text-sm">Action items with assignees and due dates</span>
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-md">
+                  <h4 className="font-medium mb-2">Email Preview</h4>
+                  <div className="bg-white p-4 rounded border">
+                    <p className="font-medium">Subject: Follow-up: {meetingData.title}</p>
+                    <div className="mt-2 text-sm text-gray-700">
+                      <p>Hi Team,</p>
+                      <p className="mt-2">Here's a summary of our meeting:</p>
+
+                      <div className="mt-3">
+                        <p className="font-medium">📋 Summary</p>
+                        <p>{meetingData.summary.substring(0, 100)}...</p>
+                      </div>
+
+                      <div className="mt-3">
+                        <p className="font-medium">✅ Key Decisions</p>
+                        <ul className="list-disc pl-5">
+                          {meetingData.keyDecisions.slice(0, 2).map((decision, i) => (
+                            <li key={i}>{decision.substring(0, 60)}...</li>
+                          ))}
+                          {meetingData.keyDecisions.length > 2 && <li>...</li>}
+                        </ul>
+                      </div>
+
+                      <div className="mt-3">
+                        <p className="font-medium">🛠️ Action Items</p>
+                        <ul className="list-disc pl-5">
+                          {meetingData.actionItems.slice(0, 2).map((item, i) => (
+                            <li key={i}>
+                              <strong>{item.person}</strong>: {item.task.substring(0, 40)}...
+                            </li>
+                          ))}
+                          {meetingData.actionItems.length > 2 && <li>...</li>}
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                <Button className="w-full">
+                  <Send className="mr-2 h-4 w-4" />
+                  Send Summary Email
+                </Button>
               </div>
             </CardContent>
-            <CardFooter className="border-t bg-gray-50">
-              <Button className="w-full">
-                <Send className="mr-2 h-4 w-4" />
-                Send Summary Email
-              </Button>
-            </CardFooter>
           </Card>
         </TabsContent>
       </Tabs>

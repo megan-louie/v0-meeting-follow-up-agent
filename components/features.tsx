@@ -1,4 +1,4 @@
-import { CheckCircle, Users, FileText, Mail } from "lucide-react"
+import { CheckCircle, Users, FileText, Mail, Cpu } from "lucide-react"
 
 export function Features() {
   return (
@@ -45,6 +45,15 @@ export function Features() {
           <h3 className="font-bold mb-2">Automated Follow-Ups</h3>
           <p className="text-sm text-gray-600">
             Generate and send follow-up emails with summaries and action items to all participants.
+          </p>
+        </div>
+        <div className="border rounded-lg p-6 bg-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 mb-4">
+            <Cpu className="h-6 w-6 text-indigo-600" />
+          </div>
+          <h3 className="font-bold mb-2">Local Processing</h3>
+          <p className="text-sm text-gray-600">
+            Process your meeting transcripts locally without requiring any external API keys.
           </p>
         </div>
       </div>

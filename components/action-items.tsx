@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Clock, User } from "lucide-react"
@@ -14,118 +14,95 @@ interface ActionItemsProps {
 }
 
 export function ActionItems({ actionItems }: ActionItemsProps) {
-  // Ensure actionItems is an array
-  const items = Array.isArray(actionItems) ? actionItems : [];
-  
-  // If no action items, show a message
-  if (items.length === 0) {
-    return (
-      <Card className="overflow-hidden border-0 shadow-md">
-        <CardHeader className="bg-primary/5 pb-3">
-          <CardTitle>Action Items</CardTitle>
-          <CardDescription>Tasks assigned during the meeting</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6 text-center py-10">
-          <p className="text-muted-foreground italic">No action items were identified in this meeting.</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
   // Group action items by person
   const groupedByPerson: Record<string, ActionItem[]> = {}
 
-  items.forEach((item) => {
-    if (!item || typeof item !== 'object') return;
-    
-    const person = item.person || 'Unassigned';
-    if (!groupedByPerson[person]) {
-      groupedByPerson[person] = []
+  actionItems.forEach((item) => {
+    if (!groupedByPerson[item.person]) {
+      groupedByPerson[item.person] = []
     }
-    groupedByPerson[person].push(item)
+    groupedByPerson[item.person].push(item)
   })
 
   return (
     <div className="space-y-8">
-      <Card className="overflow-hidden border-0 shadow-md">
-        <CardHeader className="bg-primary/5 pb-3">
-          <CardTitle>Action Items</CardTitle>
-          <CardDescription>Tasks assigned during the meeting</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="w-[180px]">Assignee</TableHead>
-                  <TableHead>Task</TableHead>
-                  <TableHead className="w-[150px]">Due Date</TableHead>
-                  <TableHead className="w-[100px] text-center">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{item.person || 'Unassigned'}</TableCell>
-                    <TableCell>{item.task || 'No task description'}</TableCell>
-                    <TableCell>
-                      {item.dueDate ? (
-                        <div className="flex items-center">
-                          <Clock className="mr-1 h-4 w-4 text-muted-foreground" />
-                          {item.dueDate}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">Not specified</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
-                        Pending
-                      </Badge>
-                    </TableCell>
+      <Card className="overflow-hidden border shadow-md">
+        <CardContent className="p-6">
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold flex items-center">
+              <span className="mr-2">🛠️</span> Action Items
+            </h3>
+
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader className="bg-gray-50">
+                  <TableRow>
+                    <TableHead className="w-[180px]">Assignee</TableHead>
+                    <TableHead>Task</TableHead>
+                    <TableHead className="w-[150px]">Due Date</TableHead>
+                    <TableHead className="w-[100px] text-center">Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {actionItems.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{item.person}</TableCell>
+                      <TableCell>{item.task}</TableCell>
+                      <TableCell>
+                        {item.dueDate ? (
+                          <div className="flex items-center">
+                            <Clock className="mr-1 h-4 w-4 text-gray-500" />
+                            {item.dueDate}
+                          </div>
+                        ) : (
+                          <span className="text-gray-500">Not specified</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+                          Pending
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {Object.keys(groupedByPerson).length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {Object.entries(groupedByPerson).map(([person, items]) => (
-            <Card key={person} className="overflow-hidden border-0 shadow-md">
-              <CardHeader className="bg-primary/5 pb-3">
-                <div className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-base">{person}</CardTitle>
-                </div>
-                <CardDescription>
-                  {items.length} action {items.length === 1 ? "item" : "items"} assigned
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <ul className="space-y-3">
-                  {items.map((item, index) => (
-                    <li key={index} className="flex items-start rounded-md p-2 hover:bg-muted/50">
-                      <CheckCircle className="mr-2 h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm">{item.task || 'No task description'}</p>
-                        {item.dueDate && (
-                          <p className="mt-1 text-xs text-muted-foreground flex items-center">
-                            <Clock className="mr-1 h-3 w-3" />
-                            Due: {item.dueDate}
-                          </p>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {Object.entries(groupedByPerson).map(([person, items]) => (
+          <Card key={person} className="overflow-hidden border shadow-md">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <User className="h-5 w-5 text-indigo-600" />
+                <h4 className="font-medium">{person}</h4>
+                <Badge variant="outline" className="ml-auto">
+                  {items.length} {items.length === 1 ? "item" : "items"}
+                </Badge>
+              </div>
+              <ul className="space-y-3">
+                {items.map((item, index) => (
+                  <li key={index} className="flex items-start rounded-md p-2 hover:bg-gray-50">
+                    <CheckCircle className="mr-2 h-5 w-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm">{item.task}</p>
+                      {item.dueDate && (
+                        <p className="mt-1 text-xs text-gray-500 flex items-center">
+                          <Clock className="mr-1 h-3 w-3" />
+                          Due: {item.dueDate}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }

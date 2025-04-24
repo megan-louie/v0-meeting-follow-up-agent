@@ -7,59 +7,71 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, AlertCircle } from "lucide-react"
+import { Loader2, AlertCircle, FileText } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Progress } from "@/components/ui/progress"
 
 export function Upload() {
   const [file, setFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [progress, setProgress] = useState(0)
   const router = useRouter()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0])
+      setError(null)
     }
   }
 
   const handleDemoMode = async () => {
     setIsLoading(true)
     setError(null)
+    setProgress(10)
 
     try {
-      let data;
-      
-      // Check if we're on GitHub Pages (static deployment)
-      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-        // Use the static API mock
-        const { processTranscriptApi } = await import('@/lib/static-api-mock');
-        data = await processTranscriptApi({ useDemo: true });
-      } else {
-        // Use server API route
-        const response = await fetch("/api/process-transcript", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ useDemo: true }),
-        });
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return 90
+          }
+          return prev + 10
+        })
+      }, 300)
 
-        data = await response.json();
+      // Use the sample transcript
+      const response = await fetch("/api/process-transcript", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ useDemo: true }),
+      })
 
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to process demo transcript");
-        }
+      clearInterval(progressInterval)
+      setProgress(100)
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to process demo transcript")
       }
 
       // Navigate to results page with the processed data
-      router.push(`/results?id=${data.id}`);
+      setTimeout(() => {
+        router.push(`/results?id=${data.id}`)
+      }, 500) // Short delay to show 100% progress
     } catch (error) {
-      console.error("Error processing demo transcript:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to process demo transcript";
-      setError(errorMessage);
+      console.error("Error processing demo transcript:", error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to process demo transcript"
+      setError(errorMessage)
+      setProgress(0)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
@@ -69,41 +81,49 @@ export function Upload() {
 
     setIsLoading(true)
     setError(null)
+    setProgress(10)
 
     // Create FormData to send the file
     const formData = new FormData()
     formData.append("transcript", file)
 
     try {
-      let data;
-      
-      // Check if we're on GitHub Pages (static deployment)
-      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
-        // Use the static API mock
-        const { processTranscriptApi } = await import('@/lib/static-api-mock');
-        data = await processTranscriptApi(formData);
-      } else {
-        // Use server API route
-        const response = await fetch("/api/process-transcript", {
-          method: "POST",
-          body: formData,
-        });
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return 90
+          }
+          return prev + 10
+        })
+      }, 300)
 
-        data = await response.json();
+      const response = await fetch("/api/process-transcript", {
+        method: "POST",
+        body: formData,
+      })
 
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to process transcript");
-        }
+      clearInterval(progressInterval)
+      setProgress(100)
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to process transcript")
       }
 
       // Navigate to results page with the processed data
-      router.push(`/results?id=${data.id}`);
+      setTimeout(() => {
+        router.push(`/results?id=${data.id}`)
+      }, 500) // Short delay to show 100% progress
     } catch (error) {
-      console.error("Error processing transcript:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to process transcript";
-      setError(errorMessage);
+      console.error("Error processing transcript:", error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to process transcript"
+      setError(errorMessage)
+      setProgress(0)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
@@ -163,6 +183,24 @@ export function Upload() {
               </div>
             </div>
           </div>
+
+          {file && (
+            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+              <FileText className="h-4 w-4 text-indigo-600" />
+              <span className="text-sm font-medium truncate">{file.name}</span>
+              <span className="text-xs text-gray-500 ml-auto">{(file.size / 1024).toFixed(1)} KB</span>
+            </div>
+          )}
+
+          {isLoading && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs">
+                <span>Processing transcript...</span>
+                <span>{progress}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+          )}
 
           <div className="flex flex-col gap-2 pt-2">
             <Button type="submit" disabled={!file || isLoading} className="w-full flex items-center justify-center">
