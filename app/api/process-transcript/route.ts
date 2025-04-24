@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { v4 as uuidv4 } from "uuid"
 import { mockMeetingData } from "@/lib/mock-meeting-data"
+import { analyzeMeetingTranscript, extractBasicInfo } from "@/lib/gemini-api"
+import { parseTranscript } from "@/lib/transcript-parser"
 
 // In-memory storage for processed results (in a real app, use a database)
 const processedResults = new Map()
@@ -9,6 +11,7 @@ export async function POST(req: NextRequest) {
   try {
     let transcriptText = ""
     let useDemo = false
+    let fileType = ""
 
     // Check if this is a JSON request (demo mode)
     const contentType = req.headers.get("content-type") || ""
@@ -17,9 +20,10 @@ export async function POST(req: NextRequest) {
       useDemo = isDemoMode
 
       if (useDemo) {
-        // Use mock data for demo mode to avoid API calls
+        // Use sample transcript for demo mode
         const { sampleTranscript } = await import("@/lib/sample-transcript")
         transcriptText = sampleTranscript
+        fileType = "txt"
       }
     } else {
       // Regular file upload
@@ -32,23 +36,49 @@ export async function POST(req: NextRequest) {
 
       // Read the file content
       transcriptText = await transcriptFile.text()
+      
+      // Get file extension for parsing
+      const fileName = transcriptFile.name || ""
+      fileType = fileName.split('.').pop()?.toLowerCase() || ""
+      console.log(`Processing file of type: ${fileType}`)
     }
 
     if (!transcriptText && !useDemo) {
       return NextResponse.json({ error: "No transcript content provided" }, { status: 400 })
     }
 
+    // Parse the transcript based on file type
+    let parsedTranscript = transcriptText
+    try {
+      console.log("Parsing transcript content...")
+      parsedTranscript = parseTranscript(transcriptText, fileType)
+      console.log("Transcript parsed successfully")
+    } catch (parseError) {
+      console.error("Error parsing transcript:", parseError)
+      // If parsing fails, use the original text
+    }
+
     let meetingData
 
-    // For simplicity and to avoid requiring API keys, we'll use the mock data
-    // In a production app, you would integrate with Hugging Face Inference API here
-    meetingData = mockMeetingData
-
-    // If we have transcript text, we could log it or use it for debugging
-    if (transcriptText && !useDemo) {
-      console.log("Received transcript text:", transcriptText.substring(0, 100) + "...")
-      // In a real implementation, you would send this to Hugging Face API
-      // For now, we'll just use the mock data
+    // Process the transcript with Gemini API
+    try {
+      console.log("Processing transcript with Gemini API...")
+      meetingData = await analyzeMeetingTranscript(parsedTranscript)
+      console.log("Gemini API processing successful")
+    } catch (error) {
+      console.error("Error processing with Gemini API:", error)
+      
+      // First fallback: try basic extraction
+      try {
+        console.log("Attempting basic extraction fallback...")
+        meetingData = extractBasicInfo(parsedTranscript)
+      } catch (fallbackError) {
+        console.error("Basic extraction fallback failed:", fallbackError)
+        
+        // Final fallback: use mock data
+        console.log("Using mock data as final fallback")
+        meetingData = mockMeetingData
+      }
     }
 
     // Generate a unique ID for this result

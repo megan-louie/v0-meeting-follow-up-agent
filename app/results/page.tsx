@@ -49,24 +49,35 @@ export default function ResultsPage() {
 
     async function fetchResults() {
       try {
-        const response = await fetch(`/api/process-transcript?id=${id}`)
+        let data;
+        
+        // Check if we're on GitHub Pages (static deployment)
+        if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+          // Use the static API mock
+          const { getMeetingDataApi } = await import('@/lib/static-api-mock');
+          data = await getMeetingDataApi(id as string);
+        } else {
+          // Use server API route
+          const response = await fetch(`/api/process-transcript?id=${id}`);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch results")
+          if (!response.ok) {
+            throw new Error("Failed to fetch results");
+          }
+
+          data = await response.json();
         }
-
-        const data = await response.json()
-        setMeetingData(data)
+        
+        setMeetingData(data);
 
         // Check if this is likely demo data by comparing the title
         if (data.title === "Q2 Product Roadmap Planning") {
-          setIsDemoData(true)
+          setIsDemoData(true);
         }
       } catch (err) {
-        setError("Failed to load meeting data")
-        console.error(err)
+        setError("Failed to load meeting data");
+        console.error(err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 

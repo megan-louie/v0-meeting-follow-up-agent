@@ -28,29 +28,38 @@ export function Upload() {
     setError(null)
 
     try {
-      // Use the sample transcript
-      const response = await fetch("/api/process-transcript", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ useDemo: true }),
-      })
+      let data;
+      
+      // Check if we're on GitHub Pages (static deployment)
+      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+        // Use the static API mock
+        const { processTranscriptApi } = await import('@/lib/static-api-mock');
+        data = await processTranscriptApi({ useDemo: true });
+      } else {
+        // Use server API route
+        const response = await fetch("/api/process-transcript", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ useDemo: true }),
+        });
 
-      const data = await response.json()
+        data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to process demo transcript")
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to process demo transcript");
+        }
       }
 
       // Navigate to results page with the processed data
-      router.push(`/results?id=${data.id}`)
+      router.push(`/results?id=${data.id}`);
     } catch (error) {
-      console.error("Error processing demo transcript:", error)
-      const errorMessage = error instanceof Error ? error.message : "Failed to process demo transcript"
-      setError(errorMessage)
+      console.error("Error processing demo transcript:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to process demo transcript";
+      setError(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -66,25 +75,35 @@ export function Upload() {
     formData.append("transcript", file)
 
     try {
-      const response = await fetch("/api/process-transcript", {
-        method: "POST",
-        body: formData,
-      })
+      let data;
+      
+      // Check if we're on GitHub Pages (static deployment)
+      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+        // Use the static API mock
+        const { processTranscriptApi } = await import('@/lib/static-api-mock');
+        data = await processTranscriptApi(formData);
+      } else {
+        // Use server API route
+        const response = await fetch("/api/process-transcript", {
+          method: "POST",
+          body: formData,
+        });
 
-      const data = await response.json()
+        data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to process transcript")
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to process transcript");
+        }
       }
 
       // Navigate to results page with the processed data
-      router.push(`/results?id=${data.id}`)
+      router.push(`/results?id=${data.id}`);
     } catch (error) {
-      console.error("Error processing transcript:", error)
-      const errorMessage = error instanceof Error ? error.message : "Failed to process transcript"
-      setError(errorMessage)
+      console.error("Error processing transcript:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to process transcript";
+      setError(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 

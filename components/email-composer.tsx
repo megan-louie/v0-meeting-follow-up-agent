@@ -178,7 +178,27 @@ Best regards,
         </CardContent>
         <CardFooter className="flex justify-between bg-gray-50 border-t">
           <Button variant="outline">Preview</Button>
-          <Button>
+          <Button onClick={async () => {
+            try {
+              // Check if we're on GitHub Pages (static deployment)
+              if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+                // Use the static API mock
+                const { sendEmailApi } = await import('@/lib/static-api-mock');
+                await sendEmailApi({ 
+                  to: selectedPerson === 'all' ? 'All Participants' : selectedPerson,
+                  subject: emailSubject,
+                  body: emailBody
+                });
+                alert('Email sent successfully (simulated)');
+              } else {
+                // In a real environment, this would send to the API route
+                alert('Email sending would connect to a real email service in production.');
+              }
+            } catch (error) {
+              console.error('Error sending email:', error);
+              alert('Failed to send email: ' + (error instanceof Error ? error.message : 'Unknown error'));
+            }
+          }}>
             <Send className="mr-2 h-4 w-4" />
             Send Email
           </Button>

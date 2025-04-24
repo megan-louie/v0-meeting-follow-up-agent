@@ -1,0 +1,22 @@
+timestamp,speaker,text
+00:00,Meeting Bot,Meeting: Quarterly Product Planning
+00:15,Meeting Bot,Date: 04/25/2025
+00:30,Meeting Bot,"Participants: John Smith (Product Manager), Sarah Lee (UX Designer), Mike Johnson (Engineer), Emma Chen (QA Lead)"
+01:30,John Smith,"Good morning everyone! Let's get started with our quarterly planning session."
+02:15,Sarah Lee,"I'd like to discuss the new dashboard design we've been working on."
+03:00,Mike Johnson,"Before we do that, could we talk about the backend infrastructure updates?"
+03:45,Emma Chen,"Yes, and I have concerns about the testing timeline for both of those features."
+04:30,John Smith,"Good points. Let's start with Mike's concern about the infrastructure."
+05:15,Mike Johnson,"We need to upgrade our database by next month to handle the increased load."
+06:00,Sarah Lee,"How will that impact the dashboard redesign timeline?"
+06:45,Mike Johnson,"We should complete the upgrade before implementing the new dashboard features."
+07:30,John Smith,"Let's target May 15th for the database upgrade then."
+08:15,Emma Chen,"I'll need two weeks after that for thorough testing."
+09:00,John Smith,"So the dashboard release would be around June 1st?"
+09:45,Sarah Lee,"That works for my team. We'll have the designs finalized by May 1st."
+10:30,John Smith,"Great, so our action items are: Mike leads the database upgrade by May 15th, Emma conducts testing by May 31st, and Sarah's team finalizes designs by May 1st."
+11:15,Emma Chen,"I'll prepare a detailed test plan by next Friday."
+12:00,John Smith,"Perfect. Any other topics we need to cover today?"
+12:45,Sarah Lee,"We should discuss the mobile app improvements."
+13:30,Mike Johnson,"I think that's a separate discussion. Let's schedule another meeting for that."
+14:15,John Smith,"Agreed. I'll send out a calendar invite for next week. Thanks everyone!"
